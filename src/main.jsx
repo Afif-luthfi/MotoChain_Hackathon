@@ -17,6 +17,9 @@ import { validateMetadata } from "./lib/schema";
 import ReceiptAssistant from "./ReceiptAssistant";
 import "./styles.css";
 
+// Isi URL halaman verifikasi kontrak di sini saat sudah tersedia.
+const BOTCHAIN_EXPLORER_URL = "";
+
 const same = (a, b) => Boolean(a && b && a.toLowerCase() === b.toLowerCase());
 const short = (a) =>
   a ? a.slice(0, 6) + "…" + a.slice(-4) : "Hubungkan dompet";
@@ -351,19 +354,27 @@ function App() {
           </div>
         )}
       </main>
-      <footer>
-        <a className="footer-brand" href="#/">
-          Motochain Service
-        </a>
-        <p>Dicatat pemilik. Kondisi fisik tetap perlu diperiksa.</p>
-        <div>
-          <a href="https://botchain.ai" target="_blank" rel="noreferrer">
-            BOT Chain
-          </a>
-          <a href="https://scan.botchain.ai" target="_blank" rel="noreferrer">
-            Explorer
-          </a>
-        </div>
+      <footer className="site-footer">
+        <section className="footer-infrastructure" aria-label="Powered by BOT Chain">
+          <p className="footer-eyebrow">POWERED BY INFRASTRUCTURE</p>
+          <div className="footer-botchain">
+            <img src="/botchain-logo.png" alt="" width="64" height="64" />
+            <span>BOT CHAIN</span>
+          </div>
+          {BOTCHAIN_EXPLORER_URL ? (
+            <a className="footer-explorer" href={BOTCHAIN_EXPLORER_URL} target="_blank" rel="noopener noreferrer">
+              Verify Smart Contract on Explorer
+            </a>
+          ) : (
+            <span className="footer-explorer" aria-disabled="true">
+              Verify Smart Contract on Explorer
+            </span>
+          )}
+        </section>
+        <section className="footer-identity">
+          <a className="footer-brand" href="#/">Motochain Service</a>
+          <p>Dicatat pemilik. Kondisi fisik tetap perlu diperiksa.</p>
+        </section>
       </footer>
     </>
   );
