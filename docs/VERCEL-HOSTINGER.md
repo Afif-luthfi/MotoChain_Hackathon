@@ -6,7 +6,7 @@ Frontend tetap di Vercel; backend metadata, autentikasi wallet dan Gemini berjal
 
 Set VITE_API_URL=https://lbdeosccicyqrjevshya.supabase.co/functions/v1/motochain-api.
 Set VITE_TESTNET_CONTRACT=0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9.
-Biarkan VITE_MAINNET_CONTRACT kosong sampai kontrak Mainnet terpisah tersedia.
+Set VITE_MAINNET_CONTRACT=0xA665c9a42571AAf3Cd0881421446060e0C1F9d92.
 Build: npm run build; output dist; Node 24. vercel.json menjalankan pemeriksaan URL API sebelum build.
 
 Jika environment VITE_API_URL belum didefinisikan, kode memakai alamat Supabase default. Nilai lama di dashboard tetap mengoverride default dan harus diperbarui. Frontend Vercel perlu redeploy agar konfigurasi baru berlaku; deployment lama tidak diubah oleh integrasi lokal ini.

@@ -17,8 +17,7 @@ import { validateMetadata } from "./lib/schema";
 import ReceiptAssistant from "./ReceiptAssistant";
 import "./styles.css";
 
-// Isi URL halaman verifikasi kontrak di sini saat sudah tersedia.
-const BOTCHAIN_EXPLORER_URL = "";
+const BOTCHAIN_EXPLORER_URL = "https://scan.botchain.ai/address/0xA665c9a42571AAf3Cd0881421446060e0C1F9d92";
 
 const same = (a, b) => Boolean(a && b && a.toLowerCase() === b.toLowerCase());
 const short = (a) =>

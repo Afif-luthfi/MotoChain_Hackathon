@@ -80,10 +80,10 @@ The following values are safe to expose to the frontend:
 ```text
 VITE_API_URL=https://<project-ref>.supabase.co/functions/v1/motochain-api
 VITE_TESTNET_CONTRACT=0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9
-VITE_MAINNET_CONTRACT=
+VITE_MAINNET_CONTRACT=0xA665c9a42571AAf3Cd0881421446060e0C1F9d92
 ```
 
-Keep `VITE_MAINNET_CONTRACT` empty until the version 2 contract is available on Mainnet. Never put a private key or a Gemini API key in a `VITE_` variable.
+The Mainnet contract address is `0xA665c9a42571AAf3Cd0881421446060e0C1F9d92`. Never put a private key or a Gemini API key in a `VITE_` variable.
 
 ### Backend Secrets on Supabase
 

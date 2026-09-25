@@ -17,7 +17,7 @@ export const networks = {
     label: "BOT Mainnet",
     rpc: "https://rpc.botchain.ai",
     explorer: "https://scan.botchain.ai",
-    contract: import.meta.env.VITE_MAINNET_CONTRACT || "",
+    contract: import.meta.env.VITE_MAINNET_CONTRACT ?? "0xA665c9a42571AAf3Cd0881421446060e0C1F9d92",
   },
 };
 export function contractAddress(network) {

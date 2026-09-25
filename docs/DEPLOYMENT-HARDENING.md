@@ -10,7 +10,7 @@ Use Node 24.13+ (the current project runtime is 24.17). Local development contin
 
 1. Choose a VPS with Docker Compose and a public domain. Point its DNS to that VPS and allow ports 80/443. Caddy obtains and renews HTTPS certificates: https://caddyserver.com/docs/automatic-https.
 2. Set DOMAIN to the backend hostname only and PUBLIC_URL to the frontend HTTPS origin. For Vercel + Hostinger, follow VERCEL-HOSTINGER.md. Keep the Gemini key in the backend .env, never VITE_ variables. Set AI_ALLOWED_WALLETS to the comma-separated wallet addresses of your team and approved testers.
-3. Keep VITE_TESTNET_CONTRACT as the existing Testnet address. Leave VITE_MAINNET_CONTRACT empty until a separate Mainnet deployment exists.
+3. Keep VITE_TESTNET_CONTRACT as the existing Testnet address. Set VITE_MAINNET_CONTRACT=0xA665c9a42571AAf3Cd0881421446060e0C1F9d92.
 4. Run docker compose config --quiet, then docker compose up -d --build on the host.
 5. Verify https://YOUR_DOMAIN/api/health, wallet login, receipt extraction, metadata save/read and transaction proof from another device before announcing deployment.
 6. Inspect docker compose logs backup. A verified snapshot is created at startup and every six hours in app_backups. Copy verified snapshots to another host or encrypted object storage. A backup volume on the same VPS does not protect against loss of that VPS.
