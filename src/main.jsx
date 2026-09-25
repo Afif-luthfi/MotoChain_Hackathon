@@ -432,13 +432,14 @@ function OwnerPage({ id, ctx, mode }) {
       <div className="owner-layout">
         <aside className="owner-motors">
           <h2>Motor saya</h2>
+          <p className="caption">Nomor motor mengikuti urutan di dompetmu.</p>
           {motors.loading && <p role="status">Mengambil daftar motor…</p>}
           {motors.error && <Notice error>{motors.error}</Notice>}
           {motors.items?.length === 0 && (
             <p>Belum ada motor terdaftar untuk dompet ini.</p>
           )}
           <div className="garage-motor-list">
-            {motors.items?.map((m) => (
+            {motors.items?.map((m, index) => (
               <a
                 key={m.id}
                 className={selected === m.id ? "selected" : ""}
@@ -449,7 +450,7 @@ function OwnerPage({ id, ctx, mode }) {
                     : passportUrl(ctx.network, m.id)
                 }
               >
-                <span>Paspor #{m.id}</span>
+                <span>Motor #{index + 1}</span>
                 <strong>
                   {m.data?.brand} {m.data?.model || "Data belum tersedia"}
                 </strong>
@@ -474,14 +475,14 @@ function OwnerPage({ id, ctx, mode }) {
               );
             }}
           >
-            <label htmlFor="find-passport">Buka paspor nomor</label>
+            <label htmlFor="find-passport">Cari ID paspor blockchain</label>
             <input
               id="find-passport"
               name="id"
               required
               pattern="[1-9][0-9]*"
               inputMode="numeric"
-              placeholder="Contoh: 1"
+              placeholder="Contoh ID paspor: 2"
             />
             <button className="secondary">Buka paspor</button>
           </form>
@@ -537,7 +538,7 @@ function MotorBook({ motor, ctx, mode }) {
       <div className="owner-motor-heading">
         <div>
           <p className="section-label">
-            Paspor #{motor.id} · {networks[ctx.network].label}
+            ID Paspor Blockchain: #{motor.id} · {networks[ctx.network].label}
           </p>
           <h2>
             {motor.data?.brand} {motor.data?.model || "Data belum tersedia"}
