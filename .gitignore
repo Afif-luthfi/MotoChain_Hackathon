@@ -5,7 +5,8 @@ dist/
 !.env.example
 data/
 backups/
+.vercel/
+supabase/.temp/
 test-results/
 playwright-report/
 *.log
-supabase/.temp/

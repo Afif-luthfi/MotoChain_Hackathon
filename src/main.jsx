@@ -270,6 +270,13 @@ function App() {
         </div>
       </header>
       <main id="main" tabIndex={-1}>
+        {import.meta.env.VITE_PREVIEW_ONLY === "true" && (
+          <Notice>
+            Preview tampilan: backend belum terhubung. Pendaftaran motor,
+            penyimpanan catatan, dan Gemini belum aktif di tautan ini. Riwayat
+            dengan alamat data lokal mungkin belum dapat dibuka.
+          </Notice>
+        )}
         {error && <Notice error>{error}</Notice>}
         {notice && <Notice>{notice}</Notice>}
         {pending && (

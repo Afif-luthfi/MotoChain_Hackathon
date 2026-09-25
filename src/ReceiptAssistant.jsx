@@ -27,6 +27,10 @@ export default function ReceiptAssistant({ onApply }) {
   const fileVersion = useRef(0);
   const inputRef = useRef(null);
   async function checkStatus() {
+    if (import.meta.env.VITE_PREVIEW_ONLY === "true") {
+      setStatus({ configured: false, preview: true });
+      return;
+    }
     try {
       const response = await fetch(api + "/api/ai/status", {
         signal: AbortSignal.timeout(6000),
@@ -140,9 +144,11 @@ export default function ReceiptAssistant({ onApply }) {
       ) : !status.configured ? (
         <div className="notice">
           <p>
-            {status.unavailable
-              ? "Layanan AI belum dapat dihubungi."
-              : "AI belum diaktifkan. Pengelola perlu menambahkan API key Gemini di server."}{" "}
+            {status.preview
+              ? "Gemini belum aktif pada preview ini karena backend belum terhubung."
+              : status.unavailable
+                ? "Layanan AI belum dapat dihubungi."
+                : "AI belum diaktifkan. Pengelola perlu menambahkan API key Gemini di server."}{" "}
             Formulir manual tetap bisa digunakan.
           </p>
           <button type="button" className="secondary" onClick={checkStatus}>

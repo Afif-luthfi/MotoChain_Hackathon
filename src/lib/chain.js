@@ -176,6 +176,10 @@ export async function recordProof(network, record) {
   };
 }
 export async function chainWrite(network, action, args, account, progress) {
+  if (import.meta.env.VITE_PREVIEW_ONLY === "true")
+    throw new Error(
+      "Penyimpanan belum aktif pada preview ini. Backend belum terhubung.",
+    );
   if (!configured(network)) throw new Error("Kontrak belum dikonfigurasi.");
   const connected = await connectWallet(network);
   if (connected.toLowerCase() !== account.toLowerCase())

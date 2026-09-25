@@ -10,7 +10,7 @@ Gemini only prepares a draft from a receipt photo or text. The owner must review
 
 ## 2. Website and Demo Links
 
-- **Production website:** [Vercel deployment](https://motochain-hackathon-ssn31pny5-afif-luthfi06.vercel.app) — verify or redeploy it so it is publicly accessible before submission.
+- **Production website:** [Vercel deployment](https://www.motochain-service.site/) — verify or redeploy it so it is publicly accessible before submission.
 - **Demo video:** no video link yet.
 - **Repository:** [Afif-luthfi/MotoChain_Hackathon](https://github.com/Afif-luthfi/MotoChain_Hackathon)
 - **Blockchain:** BOT Chain Testnet, Chain ID `968`.
