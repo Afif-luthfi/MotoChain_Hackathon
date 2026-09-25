@@ -213,11 +213,9 @@ function App() {
         <nav className={menu ? "open" : ""} aria-label="Navigasi utama">
           <a
             href="#/garage"
-            className={
-              ["home", "garage", "passport"].includes(page) ? "active" : ""
-            }
+            className={["home", "garage"].includes(page) ? "active" : ""}
             aria-current={
-              ["home", "garage", "passport"].includes(page) ? "page" : undefined
+              ["home", "garage"].includes(page) ? "page" : undefined
             }
           >
             Garasi Saya
@@ -228,6 +226,15 @@ function App() {
             aria-current={page === "service" ? "page" : undefined}
           >
             Tambah Catatan Servis
+          </a>
+          <a
+            href="#/check"
+            className={["check", "passport"].includes(page) ? "active" : ""}
+            aria-current={
+              ["check", "passport"].includes(page) ? "page" : undefined
+            }
+          >
+            Cek Paspor Motor
           </a>
           <a href="#/guide">Panduan</a>
           <a href="#/settings">Jaringan</a>
@@ -319,6 +326,7 @@ function App() {
           <Settings ctx={ctx} refresh={() => setRevision((n) => n + 1)} />
         )}
         {page === "guide" && <Guide />}
+        {page === "check" && <PassportSearch ctx={ctx} />}
         {![
           "home",
           "garage",
@@ -328,6 +336,7 @@ function App() {
           "register",
           "settings",
           "guide",
+          "check",
         ].includes(page) && (
           <div className="empty">
             <h1>Halaman tidak ditemukan</h1>
@@ -350,6 +359,49 @@ function App() {
         </div>
       </footer>
     </>
+  );
+}
+function PassportSearch({ ctx }) {
+  return (
+    <section className="page">
+      <div className="page-heading">
+        <div>
+          <p className="section-label">Riwayat servis terbuka</p>
+          <h1>Cek Paspor Motor</h1>
+          <p>
+            Masukkan ID paspor pada jaringan yang dipilih untuk membaca riwayat
+            servis motor.
+          </p>
+        </div>
+      </div>
+      <p>
+        Tidak perlu menghubungkan dompet. Kamu juga bisa memindai QR paspor yang
+        dibagikan pemilik menggunakan kamera ponsel untuk membuka tautannya.
+      </p>
+      <form
+        className="passport-search"
+        onSubmit={(e) => {
+          e.preventDefault();
+          go(passportUrl(ctx.network, new FormData(e.currentTarget).get("id")));
+        }}
+      >
+        <label htmlFor="find-passport">Cari ID paspor blockchain</label>
+        <input
+          id="find-passport"
+          name="id"
+          required
+          pattern="[1-9][0-9]*"
+          inputMode="numeric"
+          placeholder="Contoh ID paspor: 2"
+        />
+        <button className="secondary">Buka paspor</button>
+      </form>
+
+      <p className="caption">
+        Riwayat dicatat oleh pemilik, bukan verifikasi bengkel atau jaminan
+        kondisi motor. Hanya pemilik yang dapat menambahkan catatan.
+      </p>
+    </section>
   );
 }
 function OwnerPage({ id, ctx, mode }) {
@@ -397,18 +449,24 @@ function OwnerPage({ id, ctx, mode }) {
     };
   }, [selected, ctx.actor, ctx.network, ctx.revision]);
   const motor = state.motor;
+  const publicView =
+    mode === "detail" && (!motor || !same(motor.owner, ctx.actor));
   return (
     <section
       className={`page owner-page ${mode === "garage" ? "garage-overview" : ""}`}
     >
       <div className="page-heading">
         <div>
-          <p className="section-label">Buku servis milikmu</p>
+          <p className="section-label">
+            {publicView ? "Riwayat servis terbuka" : "Buku servis milikmu"}
+          </p>
           <h1>
             {mode === "service"
               ? "Tambah Catatan Servis"
               : mode === "detail"
-                ? "Informasi motor saya"
+                ? publicView
+                  ? "Paspor Motor Publik"
+                  : "Informasi motor saya"
                 : "Garasi Saya"}
           </h1>
           <p>
@@ -423,75 +481,59 @@ function OwnerPage({ id, ctx, mode }) {
           Daftarkan motor
         </a>
       </div>
-      {!ctx.actor && (
+      {!ctx.actor && mode !== "detail" && (
         <Notice>
           <button onClick={ctx.connect}>Hubungkan dompet pemilik</button>
           <p>Paspor publik tetap dapat dibaca tanpa dompet.</p>
         </Notice>
       )}
-      <div className="owner-layout">
-        <aside className="owner-motors">
-          <h2>Motor saya</h2>
-          <p className="caption">Nomor motor mengikuti urutan di dompetmu.</p>
-          {motors.loading && <p role="status">Mengambil daftar motor…</p>}
-          {motors.error && <Notice error>{motors.error}</Notice>}
-          {motors.items?.length === 0 && (
-            <p>Belum ada motor terdaftar untuk dompet ini.</p>
-          )}
-          <div className="garage-motor-list">
-            {motors.items?.map((m, index) => (
-              <a
-                key={m.id}
-                className={selected === m.id ? "selected" : ""}
-                aria-current={selected === m.id ? "page" : undefined}
-                href={
-                  mode === "service"
-                    ? `#/service/${ctx.network}/${m.id}`
-                    : passportUrl(ctx.network, m.id)
-                }
-              >
-                <span>Motor #{index + 1}</span>
-                <strong>
-                  {m.data?.brand} {m.data?.model || "Data belum tersedia"}
-                </strong>
-                <small>{m.data?.name}</small>
-                <span className="inline-link">
-                  {mode === "service"
-                    ? "Pilih motor ini"
-                    : "Informasi & riwayat servis"}
-                </span>
-              </a>
-            ))}
-          </div>
-          <form
-            className="passport-search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              go(
-                passportUrl(
-                  ctx.network,
-                  new FormData(e.currentTarget).get("id"),
-                ),
-              );
-            }}
-          >
-            <label htmlFor="find-passport">Cari ID paspor blockchain</label>
-            <input
-              id="find-passport"
-              name="id"
-              required
-              pattern="[1-9][0-9]*"
-              inputMode="numeric"
-              placeholder="Contoh ID paspor: 2"
-            />
-            <button className="secondary">Buka paspor</button>
-          </form>
-          {ctx.actor && (
-            <p className="caption">
-              Dompet aktif <span className="address">{ctx.actor}</span>
-            </p>
-          )}
-        </aside>
+      <div className={publicView ? "public-passport-layout" : "owner-layout"}>
+        {!publicView && (
+          <aside className="owner-motors">
+            <h2>Motor saya</h2>
+            <p className="caption">Nomor motor mengikuti urutan di dompetmu.</p>
+            {motors.loading && <p role="status">Mengambil daftar motor…</p>}
+            {motors.error && <Notice error>{motors.error}</Notice>}
+            {motors.items?.length === 0 && (
+              <p>Belum ada motor terdaftar untuk dompet ini.</p>
+            )}
+            <div className="garage-motor-list">
+              {motors.items?.map((m, index) => (
+                <a
+                  key={m.id}
+                  className={selected === m.id ? "selected" : ""}
+                  aria-current={selected === m.id ? "page" : undefined}
+                  href={
+                    mode === "service"
+                      ? `#/service/${ctx.network}/${m.id}`
+                      : passportUrl(ctx.network, m.id)
+                  }
+                >
+                  <span>Motor #{index + 1}</span>
+                  <strong>
+                    {m.data?.brand} {m.data?.model || "Data belum tersedia"}
+                  </strong>
+                  <small>{m.data?.name}</small>
+                  <span className="inline-link">
+                    {mode === "service"
+                      ? "Pilih motor ini"
+                      : "Informasi & riwayat servis"}
+                  </span>
+                </a>
+              ))}
+            </div>
+            {ctx.actor && (
+              <p className="caption">
+                Dompet aktif <span className="address">{ctx.actor}</span>
+              </p>
+            )}
+          </aside>
+        )}
+        {publicView && (
+          <a className="back" href="#/check">
+            ← Cek paspor motor lain
+          </a>
+        )}
         <div className="owner-content" hidden={mode === "garage"}>
           {state.loading && <p role="status">Memeriksa paspor dan catatan…</p>}
           {state.error && <Notice error>{state.error}</Notice>}
@@ -729,8 +771,10 @@ function ServiceForm({ motor, ctx }) {
                 ))}
             </dl>
             <Notice>
-              Isian ini menjadi catatan publik dan tidak dapat diedit setelah
-              transaksi berhasil. Foto nota tidak ikut disimpan.
+              Siapa pun dapat membaca catatan ini melalui ID, tautan, atau QR
+              paspor, termasuk orang yang tidak terhubung ke dompetmu. Catatan
+              tidak dapat diedit setelah transaksi berhasil. Jangan sertakan
+              data pribadi. Foto dan teks nota sumber tidak ikut disimpan.
             </Notice>
             <div className="actions">
               <button

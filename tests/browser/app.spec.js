@@ -109,3 +109,16 @@ test("mobile navbar, disconnected registration and guide work without a demo fal
     ),
   ).toBe(true);
 });
+
+
+test("public passport search is separate from the wallet garage", async ({ page }) => {
+  await page.goto("/#/garage");
+  await expect(page.getByLabel("Cari ID paspor blockchain")).toHaveCount(0);
+  await page.getByRole("link", { name: "Cek Paspor Motor", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Cek Paspor Motor" })).toBeVisible();
+  await page.getByLabel("Cari ID paspor blockchain").fill("4");
+  await page.getByRole("button", { name: "Buka paspor", exact: true }).click();
+  await expect(page).toHaveURL(/#\/passport\/testnet\/4$/);
+  await expect(page.getByRole("heading", { name: "Paspor Motor Publik" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Motor saya", exact: true })).toHaveCount(0);
+});
