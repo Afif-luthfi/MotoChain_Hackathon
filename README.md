@@ -10,7 +10,7 @@ Gemini only prepares a draft from a receipt photo or text. The owner must review
 
 ## 2. Website and Demo Links
 
-- **Production website:** [Vercel deployment](https://www.motochain-service.site/) — verify or redeploy it so it is publicly accessible before submission.
+- **Production website:** [www.motochain-service.site](https://www.motochain-service.site/) — the frontend is hosted on Vercel, while the custom domain is managed through Hostinger.
 - **Demo video:** no video link yet.
 - **Repository:** [Afif-luthfi/MotoChain_Hackathon](https://github.com/Afif-luthfi/MotoChain_Hackathon)
 - **Blockchain:** BOT Chain Testnet, Chain ID `968`.
@@ -39,14 +39,14 @@ Reviewed metadata is stored through the backend, and its digest and URI are reco
 
 ## 5. Architecture and Technology
 
-| Component  | Technology                           |
-| ---------- | ------------------------------------ |
-| Frontend   | React, Vite, and Vercel              |
-| Backend    | Supabase Edge Functions              |
-| Database   | Supabase PostgreSQL                  |
-| Blockchain | Solidity smart contract on BOT Chain |
-| AI         | Google Gemini for receipt reading    |
-| Wallet     | MetaMask and EVM networks            |
+| Component  | Technology                                               |
+| ---------- | -------------------------------------------------------- |
+| Frontend   | React and Vite, hosted on Vercel with a Hostinger domain |
+| Backend    | Supabase Edge Functions                                  |
+| Database   | Supabase PostgreSQL                                      |
+| Blockchain | Solidity smart contract on BOT Chain                     |
+| AI         | Google Gemini for receipt reading                        |
+| Wallet     | MetaMask and EVM networks                                |
 
 The smart contract is in [`contracts/MotochainService.sol`](contracts/MotochainService.sol). Wallet and contract integration is in [`src/lib/chain.js`](src/lib/chain.js), while the receipt assistant is in [`src/ReceiptAssistant.jsx`](src/ReceiptAssistant.jsx).
 
@@ -92,7 +92,7 @@ Configure these secrets in **Supabase Dashboard → Edge Functions → Secrets**
 ```text
 GEMINI_API_KEY=<server-only-secret>
 GEMINI_MODEL=gemini-3.5-flash
-PUBLIC_URL=https://<production-domain>
+PUBLIC_URL=https://www.motochain-service.site
 ```
 
 Never commit an actual API key to the repository. See [`docs/SUPABASE.md`](docs/SUPABASE.md) and [`supabase/functions/.env.example`](supabase/functions/.env.example) for the complete setup.
@@ -104,6 +104,7 @@ For the local relay, `.env.example` also provides `SUPABASE_API_URL`, `PORT`, an
 ### Deployment
 
 - Deploy the frontend to Vercel with `npm run build` as the build command and `dist` as the output directory.
+- Connect `www.motochain-service.site`, managed through Hostinger, to the Vercel project using the DNS records shown by Vercel.
 - Run metadata storage, wallet authentication, and Gemini through Supabase Edge Functions.
 - Deploy the smart contract to BOT Chain using Remix or the Solidity compiler. Use compiler `0.8.30`, optimizer `200` runs, EVM `Paris`, value `0`, and no constructor arguments.
 - The version 2 contract must return `WORKFLOW_VERSION = 2`.
@@ -112,7 +113,7 @@ For the local relay, `.env.example` also provides `SUPABASE_API_URL`, `PORT`, an
 Detailed guides:
 
 - [Supabase setup](docs/SUPABASE.md)
-- [Vercel and domain deployment](docs/VERCEL-HOSTINGER.md)
+- [Vercel hosting and Hostinger domain](docs/VERCEL-HOSTINGER.md)
 - [Owner workflow and contract deployment](docs/OWNER-WORKFLOW.md)
 - [Hackathon submission checklist](docs/SUBMISSION.md)
 - [Hackathon guidebook](https://www.girlmeetstech.org/guidebook-build-week-hackathon-vol2)
@@ -135,17 +136,50 @@ The tests cover the contract, wallet authorization, metadata integrity, receipt 
 - Gemini output must always be reviewed and can be edited before it is saved.
 - A saved record is an owner-submitted record, not independent verification of a workshop, receipt, or physical repair.
 - Metadata hashes help detect changes but do not prove that a motorcycle or part was actually repaired.
-- The Mainnet contract and final production domain still need to be completed.
+- The production domain is connected through Vercel and Hostinger; the Mainnet contract still needs to be completed.
 
 ## 10. Team and License
 
-### Contributors
+### Team Members and Main Responsibilities
 
-- Afif Luthfi
-- Syauqi Radhi
-- Muhammad Oktafriansyah
+| Member                 | Role              | Main focus                                                      |
+| ---------------------- | ----------------- | --------------------------------------------------------------- |
+| Afif Luthfi            | Frontend          | React/Vite interface, wallet flows, and user experience         |
+| Syauqi Radhi Athallah  | Backend           | Supabase services, data storage, and blockchain API integration |
+| Muhammad Oktafriansyah | Quality Assurance | Automated testing, browser validation, and release verification |
 
-Hackathon-specific role assignments have not been documented yet and should be added before submission.
+#### Afif Luthfi — Frontend
+
+- Build and maintain the React/Vite interface, including the garage, motorcycle registration, service-entry form, history, and public passport views.
+- Integrate MetaMask, BOT Chain network switching, wallet signatures, contract calls, and user-facing transaction status.
+- Connect the frontend to the Supabase API and ensure that loading, error, pending, and success states are clear.
+- Implement responsive layouts and accessible controls for desktop and mobile users.
+- Maintain the Vercel frontend configuration and coordinate the Hostinger domain connection with the deployment workflow.
+- Review frontend changes for usability, accessibility, security boundaries, and consistent error messaging.
+
+#### Syauqi Radhi Athallah — Backend
+
+- Maintain Supabase Edge Functions for metadata storage, wallet authentication, session validation, quota enforcement, and Gemini requests.
+- Design and maintain PostgreSQL tables, migrations, access policies, indexes, and transactional backend procedures.
+- Implement signed metadata uploads, durable HTTPS metadata URLs, digest verification, and protection against replay or unauthorized requests.
+- Integrate the Gemini receipt assistant with server-side secrets, input validation, consent handling, usage limits, and safe error responses.
+- Maintain the API contract used by the frontend and document backend configuration, deployment, migration, and recovery procedures.
+- Review changes that affect data privacy, secret management, public metadata, and blockchain-backed record integrity.
+
+#### Muhammad Oktafriansyah — Quality Assurance
+
+- Define test scenarios for wallet authorization, owner-only writes, metadata integrity, receipt validation, Gemini review, and public passport access.
+- Maintain and run Node.js unit and integration tests, Solidity compilation checks, and production build verification.
+- Maintain Playwright browser coverage for desktop, mobile, navigation, forms, QR generation, transaction states, and error handling.
+- Verify that receipt source data is not stored, secrets are not exposed to the browser, and legacy contracts cannot receive new writes.
+- Reproduce defects, isolate regressions, document reproduction steps, and confirm fixes with targeted regression tests.
+- Perform release checks for the Vercel frontend, Hostinger domain, Supabase backend, public API health, and explorer contract activity.
+
+#### Shared Responsibilities
+
+- Review pull requests and confirm that frontend, backend, contract, and documentation changes work together.
+- Keep the README, deployment notes, environment examples, and submission checklist aligned with the current implementation.
+- Coordinate testnet demonstrations and prepare the evidence required for the hackathon submission.
 
 ### License
 
