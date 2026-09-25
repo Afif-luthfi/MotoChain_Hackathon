@@ -1,4 +1,5 @@
 import { DatabaseSync } from "node:sqlite";
+// Legacy test/archive adapter. Active persistence is supabase-store.js.
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { randomBytes, createHash } from "node:crypto";

@@ -1,4 +1,6 @@
 import express from "express";
+// Legacy disk-backed app used only by offline regression tests.
+// Active runtime: index.js -> proxy.js -> Supabase Edge Function.
 import fs from "node:fs/promises";
 import path from "node:path";
 import { verifyMessage } from "ethers";

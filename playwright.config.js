@@ -9,9 +9,9 @@ export default defineConfig({
   },
   webServer: [
     {
-      command: "node server/index.js",
-      url: "http://127.0.0.1:3001/api/health",
-      reuseExistingServer: true,
+      command: "node tests/browser/server.js",
+      url: "http://127.0.0.1:3002/api/health",
+      reuseExistingServer: false,
       timeout: 60000,
     },
     {
@@ -22,6 +22,7 @@ export default defineConfig({
         VITE_TESTNET_CONTRACT: "",
         VITE_MAINNET_CONTRACT: "",
         VITE_API_URL: "",
+        TEST_API_ORIGIN: "http://127.0.0.1:3002",
       },
       reuseExistingServer: false,
       timeout: 60000,

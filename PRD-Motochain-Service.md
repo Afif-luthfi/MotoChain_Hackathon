@@ -40,6 +40,7 @@ Navbar menyediakan Garasi Saya dan Tambah Catatan Servis. Garasi menampilkan daf
 Motor: owner, digest, URI metadata dan waktu registrasi. Catatan: motorId, issuer, digest, URI dan waktu pencatatan. Isian publik: tanggal, odometer, keluhan, pekerjaan, komponen.
 Kontrak v2 memiliki WORKFLOW_VERSION=2 dan onlyOwner pada submitService. Layout tuple Record dipertahankan untuk membaca versi lama; status 1 pada v2 berarti tersimpan langsung, bukan persetujuan dua pihak. Tidak ada setMechanic atau decideService.
 Metadata disimpan pada server content-addressed dengan tanda tangan wallet. Foto tidak menjadi bukti tersimpan.
+Implementasi penyimpanan diperbarui 25 September 2026: metadata, challenge wallet, hash sesi dan kuota berada di PostgreSQL Supabase melalui Edge Function. URL metadata baru memakai HTTPS Supabase. Kepemilikan dan hubungan riwayat tetap bersumber dari BOT Chain.
 
 ## 11. Aturan status dan kepercayaan
 Alur baru: draf lokal, diperiksa, transaksi menunggu, tersimpan. UI menggunakan Dicatat pemilik. Gemini bukan pemeriksa keaslian nota; blockchain bukan bukti pekerjaan fisik benar. Catatan lama ditampilkan dengan label status historis versi 1.

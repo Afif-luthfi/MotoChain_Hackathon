@@ -1,6 +1,8 @@
+import { loadMetadata } from "./metadata.js";
 import { BrowserProvider, Contract, JsonRpcProvider, isAddress } from "ethers";
 import artifact from "../generated/MotochainService.json";
 import { canonical, digest, uploadMessage, validateMetadata } from "./schema";
+import { DEFAULT_API_URL } from "./api-config";
 
 export const networks = {
   testnet: {
@@ -84,41 +86,12 @@ export async function connectWallet(network) {
   });
   return accounts[0];
 }
-async function metadata(uri, expectedDigest) {
-  try {
-    const url = new URL(uri);
-    if (
-      url.protocol !== "https:" &&
-      !(
-        url.protocol === "http:" &&
-        ["localhost", "127.0.0.1"].includes(url.hostname)
-      )
-    )
-      throw new Error("Alamat data tidak didukung.");
-    const response = await fetch(url, {
-      signal: AbortSignal.timeout(10000),
-      credentials: "omit",
-      referrerPolicy: "no-referrer",
-    });
-    if (!response.ok) throw new Error("Data belum tersedia.");
-    const raw = await response.text();
-    if (raw.length > 12000) throw new Error("Data terlalu besar.");
-    const data = validateMetadata(JSON.parse(raw));
-    if (digest(data) !== expectedDigest)
-      return {
-        data: null,
-        integrity: false,
-        dataError: "Isi catatan tidak cocok dengan bukti blockchain.",
-      };
-    return { data, integrity: true };
-  } catch {
-    return {
-      data: null,
-      integrity: false,
-      dataError: "Data belum tersedia atau tidak valid. Coba muat ulang.",
-    };
-  }
-}
+const metadata = (uri, expectedDigest) =>
+  loadMetadata(
+    uri,
+    expectedDigest,
+    (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL) || location.origin,
+  );
 async function allPages(method, ...args) {
   const ids = [];
   for (let offset = 0; offset < 10000; offset += 100) {
@@ -232,7 +205,8 @@ export async function chainWrite(network, action, args, account, progress) {
       timestamp = Date.now();
     progress("Setujui tanda tangan untuk menyimpan catatan publik.");
     const signature = await signer.signMessage(uploadMessage(hash, timestamp));
-    const base = import.meta.env.VITE_API_URL || location.origin;
+    const base =
+      (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL) || location.origin;
     const response = await fetch(base.replace(/\/$/, "") + "/api/metadata", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

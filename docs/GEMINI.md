@@ -1,5 +1,7 @@
 # Gemini receipt assistant
 
+> Backend update: set Gemini secrets and the wallet allowlist in Supabase Edge Functions. The root local .env no longer configures the active Gemini backend. See [SUPABASE.md](SUPABASE.md). Local-only and in-memory quota statements below describe the older implementation.
+
 ## Activate locally
 
 1. Get a key from https://aistudio.google.com/apikey.

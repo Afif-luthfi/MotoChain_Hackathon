@@ -148,7 +148,7 @@ test("signed AI login is allowlisted, single use, expiring; spending remains cap
       ).status,
       429,
     );
-    assert.equal(calls, 1);
+    assert.equal(calls, 2); // Initial 503 plus one retry; the next request remains quota-blocked.
     app.locals.security.db.exec("UPDATE sessions SET expires=0");
     assert.equal(
       (

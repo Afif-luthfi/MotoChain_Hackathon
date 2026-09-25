@@ -1,31 +1,22 @@
-# Vercel frontend + domain Hostinger
+# Vercel frontend + Supabase backend
 
-Frontend: Vercel. Domain/DNS: Hostinger. Backend Node (Gemini, SQLite, JSON metadata and backups): a separate host with a persistent disk. Do not run this filesystem backend inside Vercel Functions or put the database in /tmp.
+Frontend tetap di Vercel; backend metadata, autentikasi wallet dan Gemini berjalan di Supabase Edge Functions. Penyimpanan memakai PostgreSQL Supabase. VPS dan disk SQLite tidak diperlukan untuk runtime aktif.
 
-## Frontend setup
+## Vercel
 
-Import this project into Vercel. vercel.json configures Vite, build and dist output. Select Node 24. Set these public build variables:
-- VITE_TESTNET_CONTRACT=0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9
-- VITE_MAINNET_CONTRACT empty until Mainnet contract deployment
-- VITE_API_URL=https://api.YOUR_DOMAIN
+Set VITE_API_URL=https://lbdeosccicyqrjevshya.supabase.co/functions/v1/motochain-api.
+Set VITE_TESTNET_CONTRACT=0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9.
+Biarkan VITE_MAINNET_CONTRACT kosong sampai kontrak Mainnet terpisah tersedia.
+Build: npm run build; output dist; Node 24. vercel.json menjalankan pemeriksaan URL API sebelum build.
 
-The Vercel build intentionally fails if the backend URL is missing or not HTTPS. Set GEMINI_API_KEY only on the backend, not the Vercel frontend.
+Jika environment VITE_API_URL belum didefinisikan, kode memakai alamat Supabase default. Nilai lama di dashboard tetap mengoverride default dan harus diperbarui. Frontend Vercel perlu redeploy agar konfigurasi baru berlaku; deployment lama tidak diubah oleh integrasi lokal ini.
 
-Add your domain in Vercel project settings. In Hostinger DNS, copy the exact records Vercel provides; do not guess IP/CNAME values. If your nameservers are managed elsewhere, edit records there. Preserve existing email MX/TXT records.
-Official reference: https://vercel.com/docs/domains/set-up-custom-domain
+GEMINI_API_KEY dan AI_ALLOWED_WALLETS disetel di Supabase Edge Function Secrets, bukan environment frontend. Tidak ada service-role key di Vercel/frontend.
 
-## Backend setup (if a VPS is available)
+## Domain Hostinger
 
-Use the provided Docker Compose package on the VPS. Domain ownership alone does not supply a VPS.
+Tambahkan domain frontend di Vercel lalu salin record DNS yang ditampilkan Vercel ke pengelola DNS aktif. Pertahankan MX/TXT email yang ada. Backend dapat tetap menggunakan alamat HTTPS Supabase. Integrasi ini tidak mengubah DNS.
 
-Set DOMAIN=api.YOUR_DOMAIN for the Caddy endpoint, PUBLIC_URL=https://YOUR_DOMAIN for the frontend origin, and AI_ALLOWED_WALLETS to approved team/tester addresses. Set the server Gemini key. Point the api DNS record to the backend host. Only expose 80/443 publicly. ALLOWED_ORIGIN defaults to PUBLIC_URL, which allows authenticated cross-origin requests including the Authorization header.
+## Verifikasi
 
-Run docker compose config --quiet and docker compose up -d --build. Follow DEPLOYMENT-HARDENING.md for backups and recovery. app_data and app_backups are persistent volumes. Verify a snapshot and move copies off-host.
-
-If you have only a domain and Vercel, backend hosting remains to be selected. An alternative architecture is a managed database/object store with serverless endpoints; the current SQLite/file backend is not that architecture.
-
-## Final acceptance
-
-Check the production frontend in a second browser/device: wallet challenge, Gemini extraction, new metadata upload/read, public motorcycle history and proof. Check that mainnet metadata URLs reference https://api.YOUR_DOMAIN, not localhost. Confirm valid HTTPS for both frontend and API, quota persistence after backend restart, and a verified off-host backup.
-
-No public deployment, DNS change or paid hosting purchase has been performed by these code changes.
+Buka endpoint API /api/health: harus menunjukkan storage: supabase. Periksa unggah metadata, baca kembali, paspor publik, wallet challenge, dan Gemini setelah secret serta allowlist tersedia. Metadata baru mengembalikan URL HTTPS Supabase yang stabil untuk ditulis on-chain. Lihat SUPABASE.md untuk data yang dimigrasikan dan batasan URI lama.

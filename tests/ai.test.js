@@ -144,6 +144,26 @@ test("upstream errors and blocked/incomplete generations never leak key or raw r
     /lengkap/,
   );
 });
+test("Gemini retries a transient 503 once with the same model and deadline", async () => {
+  const requests = [];
+  const result = await extractReceipt({ text: "nota uji" }, {
+    apiKey: "test-key", model: "gemini-3.5-flash",
+    fetchImpl: async (url, options) => {
+      requests.push({ url, options });
+      return requests.length === 1 ? new Response(null, { status: 503 }) : answer(draft);
+    },
+  });
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0].url, requests[1].url);
+  assert.equal(requests[0].options.signal, requests[1].options.signal);
+  assert.equal(result.draft.action, draft.action);
+  let failures = 0;
+  await assert.rejects(extractReceipt({ text: "nota" }, {
+    apiKey: "test-key", model: "gemini-3.5-flash",
+    fetchImpl: async () => { failures++; return new Response(null, { status: 503 }); },
+  }), /dicoba ulang otomatis/);
+  assert.equal(failures, 2);
+});
 test("AI endpoint disabled without key; no external call occurs", async () => {
   let calls = 0;
   await withServer(

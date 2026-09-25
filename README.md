@@ -1,100 +1,84 @@
 # Motochain Service
 
-An owner-managed motorcycle service passport. One wallet registers the motorcycle, reviews receipt data extracted by Gemini, and saves service records. Public readers can inspect history and its blockchain digest.
+An owner-managed motorcycle service passport. One wallet registers a motorcycle, reviews receipt data extracted by Gemini, and saves service records. Public readers inspect history and its blockchain digest.
 
-## Version 2
+## Architecture
 
-The mechanic workspace, mechanic permissions and second-wallet approval were removed at the user's request. A saved service is labelled **Dicatat pemilik**, not workshop-verified. Photos and source receipt text are used only for Gemini extraction and are not stored.
+- React/Vite frontend, hosted on Vercel.
+- Supabase Edge Function `motochain-api` verifies EVM signatures and serves the metadata/auth/Gemini APIs.
+- Supabase PostgreSQL stores immutable public metadata, private wallet challenges, hashed sessions and daily quotas.
+- BOT Chain remains authoritative for owner, motorcycle/record IDs, digests and metadata URIs.
+- Receipt photos and source text are sent to Gemini only after consent and are not stored.
 
-**BOT Testnet v2 is configured at 0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9.** Read-only verification on 25 September 2026 confirmed chain ID 968, WORKFLOW_VERSION=2, one motorcycle and one service record. An existing version 1 deployment cannot be upgraded at its address. Old passports remain readable; writes to incompatible contracts are blocked before metadata upload. Mainnet deployment and website hosting are not completed by this change.
+The backend is deployed at https://lbdeosccicyqrjevshya.supabase.co/functions/v1/motochain-api. Current schema, access controls, migration details and verification are in [SUPABASE.md](docs/SUPABASE.md).
 
 ## Local use
 
-Use Node.js 24 and npm:
-
+Use Node.js 24:
 ```sh
 npm ci
 npm run build
 npm run dev
 ```
 
-Open http://127.0.0.1:5173. The API listens on port 3001. For the built application, run npm start and open http://127.0.0.1:3001.
+Copy .env.example to .env if needed without overwriting existing secrets. Open http://127.0.0.1:5173. VITE_API_URL points to the cloud API; when it is empty, the Node relay on port 3001 forwards /api to Supabase. The active server does not write JSON or SQLite files and does not fall back to disk on database failure. npm start serves the built frontend and the same relay.
 
-The navbar separates **Garasi Saya** from **Tambah Catatan Servis**. Garage entries open motorcycle information and its service history. To add a record, open Tambah Catatan Servis, select a motorcycle, upload a redacted receipt or paste its text, consent to Gemini, review its draft and apply it. Complete missing fields, click **Periksa catatan**, then **Simpan catatan**. Successful saving returns to that motorcycle's information and history. Manual entry remains available if AI cannot read the receipt.
-
-On BOT, the same wallet signs the metadata upload and sends the service transaction. There is no separate approval transaction. Another wallet cannot append to your motorcycle.
-
-The application supports BOT Testnet and BOT Mainnet, with Testnet as the default. Mainnet remains unconfigured until a separate contract is deployed there. There is no local demo mode or seeded motorcycle. Previous saved demo selections fall back to Testnet; unsupported network links are rejected rather than interpreted as on-chain IDs. Historical demo storage is left untouched but never loaded. Test fixtures live only under tests and are not bundled into the application.
+The navbar separates **Garasi Saya** from **Tambah Catatan Servis**. Register/select a motorcycle, review receipt fields, then sign the metadata and blockchain transaction with the same owner wallet. Manual entry remains available without Gemini. The public passport and QR do not require login.
 
 ## Gemini
 
-Set GEMINI_API_KEY on the server, keeping the existing key out of source control. Never use a VITE_ prefix. The server reads .env at startup. Default GEMINI_MODEL is gemini-3.5-flash, previously verified with synthetic text and image requests. Restart the API after configuration changes.
+Set GEMINI_API_KEY, GEMINI_MODEL, and PUBLIC_URL in Supabase Dashboard → Edge Functions → Secrets. See supabase/functions/.env.example. Secrets in the local root .env do not automatically reach Supabase.
 
-Photo and source text are not written to disk. Only the reviewed service fields are uploaded after the owner saves. Google receives the source only after explicit consent. AI output does not establish receipt authenticity or repair accuracy.
+The default model is gemini-3.5-flash. AI accepts all valid EVM wallets and requires a verified wallet signature and an expiring session. Global and per-wallet daily quotas remain enforced. Only SHA-256 session-token hashes are stored. Public metadata uploads use a separate signed message and do not require an AI session.
 
-See [GEMINI.md](docs/GEMINI.md) for quotas and provider troubleshooting.
+Source photos/text are never stored. Only reviewed fields are saved. Provider requests consume the durable daily quota even if Gemini fails. Gemini does not establish receipt authenticity or repair accuracy.
 
-## Deploy version 2
+## Blockchain version 2
 
-1. Upload contracts/MotochainService.sol to Remix.
-2. Compile with Solidity 0.8.30, optimizer enabled with 200 runs, EVM Paris.
-3. Choose Browser Extension / MetaMask and the target BOT network: Testnet (968) or Mainnet (677).
-4. Deploy MotochainService with Value 0 and no constructor arguments.
-5. Verify WORKFLOW_VERSION returns 2.
-6. Save the new address under **Jaringan**. The UI checks chain ID, deployed code and workflow version.
-7. Register the motorcycle again on the new contract, then save a service using that same wallet.
+Only the registered owner can submit a service. New records are immediately saved with status 1, labelled **Dicatat pemilik**. There is no mechanic workspace, second-wallet approval, ownership transfer or edit/delete workflow. Historical version 1 passports remain readable; writes to old contracts are blocked before metadata upload.
 
 | Network | Chain ID | RPC | Explorer |
-|---|---:|---|---|
+| --- | ---: | --- | --- |
 | BOT Testnet | 968 | https://rpc.bohr.life | https://scan.bohr.life |
 | BOT Mainnet | 677 | https://rpc.botchain.ai | https://scan.botchain.ai |
 
-Test tokens: https://faucet.botchain.ai/basic. Testnet contract: https://scan.bohr.life/address/0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9. Mainnet is not configured. Preserve your version 1 address to open its history.
+Testnet v2: 0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9. Mainnet is not configured. Test tokens: https://faucet.botchain.ai/basic.
 
-The on-chain Record tuple retains its earlier field layout for historical reads. New records are created immediately with status 1; this means saved in workflow v2, not two-party approval. No setMechanic or decideService function exists in v2.
+For a new deployment, compile contracts/MotochainService.sol with Solidity 0.8.30, optimizer 200 runs and EVM Paris. Deploy using the owner wallet, Value 0, no constructor arguments. Check WORKFLOW_VERSION=2 and configure the corresponding VITE_TESTNET_CONTRACT or VITE_MAINNET_CONTRACT. No private key belongs in application configuration.
 
-## Publish the application
+Metadata uploads now return a permanent Supabase HTTPS URL, including when the frontend runs locally. Old on-chain URIs remain unchanged; the frontend reads migrated localhost metadata from Supabase by its on-chain digest and verifies the hash. Unavailable HTTPS sources can also use this verified migration copy.
 
-The deployment package, persistent quotas, public AI wallet allowlist, and backup/restore procedure are documented in [DEPLOYMENT-HARDENING.md](docs/DEPLOYMENT-HARDENING.md). Public HTTPS still needs a configured host and domain; the supplied Docker Compose configuration does not publish the site by itself.
+## Vercel
 
-Edit the existing .env or hosting environment without overwriting secrets:
+Set VITE_API_URL=https://lbdeosccicyqrjevshya.supabase.co/functions/v1/motochain-api and preserve the Testnet contract variable. Build with the existing vercel.json configuration, output dist, Node 24. Redeploy after changing build variables. The existing Vercel deployment has not been redeployed by this backend change.
 
-```text
-VITE_TESTNET_CONTRACT=0x0D90E98C9Fc63FDb62843F546E578CF237d91FD9
-VITE_MAINNET_CONTRACT=
-VITE_API_URL=https://your-metadata-api.example
-```
+An absent VITE_API_URL uses the project default; an existing old value in Vercel overrides it. Never put Gemini or Supabase secret/service-role keys in VITE_ variables. See [VERCEL-HOSTINGER.md](docs/VERCEL-HOSTINGER.md) for hosting/DNS.
 
-These are placeholders. Build again after changing VITE_ values. Browser-local contract settings only affect that browser; build settings take precedence.
+Optional Docker Compose serves the frontend/relay with Caddy; no application disk volume or SQLite backup worker is needed. Old SQLite volumes/files are not deleted by this change.
 
-Build: npm ci followed by npm run build. Publish dist for static hosting. GitHub Pages cannot execute the API; host server/index.js separately on a Node service with HTTPS and persistent storage. Alternatively npm start serves both API and dist from one Node server; leave VITE_API_URL empty for same-origin hosting.
+## Validation
 
-Server settings: HOST=0.0.0.0 on a managed host, hosting-provided PORT, DATA_DIR set to a persistent absolute directory, ALLOWED_ORIGIN set to the exact frontend HTTPS origin. Keep backups and preserve published metadata URLs.
+- npm test: 20 backend/contract tests, including the Supabase handler, signed wallet sessions, sanitized errors, relay and migrated metadata reads.
+- npm run test:e2e: 9 browser scenarios, using isolated offline fixtures on ports 3002 and 5180.
+- supabase/verify.sql and supabase/verify-backend.sql: database constraints, access control, atomic quotas and replay protection in rolled-back transactions.
+- Live cloud verification: signed upload, four concurrent identical requests deduplicated into one row/quota increment, cloud and local relay readback, unauthorized AI denial.
 
-AI remains local-only by default. Public Gemini use requires AI_ALLOW_REMOTE=true plus appropriate access controls and quotas. Do not expose unrestricted key usage. GEMINI_API_KEY stays on the backend.
+The legacy SQLite adapter and backup scripts remain for offline regression tests and recovery of older archives. They are not imported by the active server entrypoint. Use PostgreSQL exports/backups for cloud data.
 
-Before creating shared on-chain records, configure a durable public metadata endpoint. Localhost metadata URLs are not accessible from other people's devices.
-
-## Validation and limits
-
-npm test runs contract, metadata and Gemini adapter tests. npm run test:e2e runs browser scenarios including real transactions on a disposable local EVM. The local EVM test is not evidence of public BOT deployment. See [VERIFICATION.md](docs/VERIFICATION.md).
-
-Public passport identity represents a managing wallet, not legal ownership. Service data is an owner's statement. Hashes detect alteration but cannot prove that physical repairs occurred, nor recover missing metadata. Photo storage, ownership transfer, corrections and independent workshop verification are outside this version.
-
-Ganache is a development-only harness. Its optional uWS binary falls back to JavaScript on Node 24, and bundled dependencies have reported audit findings. It is not imported by the frontend or API. The contract has not had an independent security audit.
+Tests do not constitute an independent security audit or evidence of a new public BOT transaction. Identity represents a managing wallet, not legal ownership. Hashes detect alteration but cannot prove physical repairs or recover missing metadata.
 
 ## Main files
 
-- src/main.jsx: garage, separate service-entry page, motorcycle information/history, public passport, registration and settings.
+- src/main.jsx: garage, registration, service-entry page and public history.
 - src/ReceiptAssistant.jsx: consent, Gemini preview and explicit draft application.
-- src/lib/chain.js: wallet, contract version guard, metadata and transaction proof.
-- contracts/MotochainService.sol: owner-only append-only service records.
-- server/: metadata and Gemini APIs.
-- docs/OWNER-WORKFLOW.md: new deployment and usage guide.
-- PRD-Motochain-Service.md: version 2 requirements, retaining the 17-section structure.
+- src/lib/chain.js: wallet, contract guard, metadata and transaction proof.
+- contracts/MotochainService.sol: owner-only append-only records.
+- server/edge-handler.js and server/supabase-store.js: current API and persistence.
+- server/receipt.js: shared receipt validation and Gemini adapter.
+- server/index.js and server/proxy.js: local/static frontend relay.
+- supabase/functions/motochain-api/: deployed entrypoint and dependency map.
+- supabase/migrations/: schema and transactional backend RPC.
+- docs/SUPABASE.md: current deployment and migration notes.
+- PRD-Motochain-Service.md: product requirements.
 
-## References
-
-- BOT documentation: https://dev-docs.botchain.ai/docs/intro/
-- Remix: https://remix.ethereum.org
-- Hackathon guide: https://www.girlmeetstech.org/guidebook-build-week-hackathon-vol2
+Competition submission and Mainnet deployment remain separate work; see docs/SUBMISSION.md.

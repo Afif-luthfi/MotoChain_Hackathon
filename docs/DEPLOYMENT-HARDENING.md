@@ -1,5 +1,7 @@
 # Public deployment hardening
 
+> Historical SQLite/file deployment guide. The active backend now uses Supabase Edge Functions and PostgreSQL; see [SUPABASE.md](SUPABASE.md). These disk/backup instructions apply only to recovering the older deployment.
+
 Implemented: durable SQLite quotas, signed wallet sessions for public Gemini, immutable metadata limits, verified backup/restore, Docker persistent volumes and Caddy HTTPS configuration.
 
 ## Deployment

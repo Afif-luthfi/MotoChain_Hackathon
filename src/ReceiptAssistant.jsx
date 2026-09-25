@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { aiAuthorization, clearAiAuthorization } from "./lib/ai-auth";
+import { DEFAULT_API_URL } from "./lib/api-config";
 const labels = {
   date: "Tanggal servis",
   odometer: "Odometer (km)",
@@ -7,7 +8,10 @@ const labels = {
   action: "Pekerjaan",
   parts: "Komponen",
 };
-const api = (import.meta.env.VITE_API_URL || "").replace(/\/$/, "");
+const api = (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL).replace(
+  /\/$/,
+  "",
+);
 export default function ReceiptAssistant({ onApply }) {
   const [status, setStatus] = useState(null);
   const [text, setText] = useState("");
