@@ -69,7 +69,75 @@ function Field({ name, value, onChange, required = true, ...props }) {
     </div>
   );
 }
+function NetworkPicker({ value, disabled, onChange, onOpen }) {
+  const [open, setOpen] = useState(false);
+  const root = React.useRef(null);
+  const trigger = React.useRef(null);
+  const options = React.useRef([]);
+  const id = React.useId();
+  const choices = ["testnet", "mainnet"];
+  useEffect(() => {
+    if (!open) return;
+    options.current[choices.indexOf(value)]?.focus();
+    const dismiss = (event) => {
+      if (!root.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", dismiss);
+    return () => document.removeEventListener("pointerdown", dismiss);
+  }, [open, value]);
+  useEffect(() => {
+    if (disabled) setOpen(false);
+  }, [disabled]);
+  return (
+    <div className="network-picker" ref={root} onBlur={(event) => {
+      if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+    }} onKeyDown={(event) => {
+      if (event.key === "Escape" && open) {
+        event.stopPropagation();
+        setOpen(false);
+        trigger.current?.focus();
+      }
+    }}>
+      <button type="button" className="network-trigger" ref={trigger}
+        aria-label="Pilih jaringan" aria-haspopup="menu" aria-expanded={open}
+        aria-controls={id} disabled={disabled}
+        onClick={() => { if (!open) onOpen(); setOpen(!open); }}
+        onKeyDown={(event) => {
+          if (["ArrowDown", "ArrowUp"].includes(event.key)) {
+            event.preventDefault(); onOpen(); setOpen(true);
+          }
+        }}>
+        <span className={`network-dot ${value}`} aria-hidden="true" />
+        <span>{networks[value].label}</span>
+        <svg className="network-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+      </button>
+      {open && <div className="network-dropdown" id={id} role="menu" aria-label="Jaringan BOT">
+        <p className="network-heading" role="presentation">PILIH JARINGAN</p>
+        {choices.map((key, index) => <button key={key} type="button"
+          className="network-option" role="menuitemradio" aria-checked={value === key}
+          aria-label={networks[key].label} disabled={disabled}
+          ref={(element) => { options.current[index] = element; }}
+          onKeyDown={(event) => {
+            const next = { ArrowDown: (index + 1) % 2, ArrowUp: (index + 1) % 2, Home: 0, End: 1 }[event.key];
+            if (next !== undefined) { event.preventDefault(); options.current[next]?.focus(); }
+          }}
+          onClick={() => {
+            setOpen(false); trigger.current?.focus();
+            if (key !== value) onChange(key);
+          }}>
+          <span className={`network-symbol ${key}`} aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Zm0 9 8-4.5M12 12 4 7.5M12 12v9" /></svg>
+          </span>
+          <span className="network-copy"><strong>{networks[key].label}</strong><small>{key === "testnet" ? "Jaringan uji coba" : "Jaringan utama"}</small></span>
+          {value === key && <svg className="network-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>}
+        </button>)}
+      </div>}
+    </div>
+  );
+}
 function App() {
+  const headerRef = React.useRef(null);
+  const menuButtonRef = React.useRef(null);
   const [route, setRoute] = useState(location.hash || "#/");
   const [network, setNetwork] = useState(
     localStorage.getItem("motochain.network") || "testnet",
@@ -93,6 +161,24 @@ function App() {
     ? routeNetwork
     : "testnet";
   const actor = account;
+  useEffect(() => {
+    if (!menu) return;
+    const dismiss = (event) => {
+      if (!headerRef.current?.contains(event.target)) setMenu(false);
+    };
+    const escape = (event) => {
+      if (event.key === "Escape") {
+        setMenu(false);
+        menuButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener("pointerdown", dismiss);
+    document.addEventListener("keydown", escape);
+    return () => {
+      document.removeEventListener("pointerdown", dismiss);
+      document.removeEventListener("keydown", escape);
+    };
+  }, [menu]);
   useEffect(() => {
     const change = () => {
       setRoute(location.hash || "#/");
@@ -201,18 +287,27 @@ function App() {
       >
         Lewati ke konten
       </a>
-      <header>
+      <header ref={headerRef} onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) setMenu(false);
+      }}>
         <a className="wordmark" href="#/">
           motochain<span>service</span>
         </a>
         <button
           className="mobile-menu secondary"
+          ref={menuButtonRef}
           aria-expanded={menu}
-          onClick={() => setMenu(!menu)}
+          aria-controls="primary-navigation"
+          onClick={() => setMenu((open) => !open)}
         >
           Menu
+          <svg className="menu-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
         </button>
-        <nav className={menu ? "open" : ""} aria-label="Navigasi utama">
+        <nav id="primary-navigation" className={menu ? "open" : ""} aria-label="Navigasi utama" onClick={(event) => {
+          if (event.target.closest("a")) setMenu(false);
+        }}>
           <a
             href="#/garage"
             className={["home", "garage"].includes(page) ? "active" : ""}
@@ -238,27 +333,21 @@ function App() {
           >
             Cek Paspor Motor
           </a>
-          <a href="#/guide">Panduan</a>
-          <a href="#/settings">Jaringan</a>
+          <a href="#/guide" aria-current={page === "guide" ? "page" : undefined}>Panduan</a>
+          <a href="#/settings" aria-current={page === "settings" ? "page" : undefined}>Jaringan</a>
         </nav>
         <div className="header-actions">
-          <label className="sr-only" htmlFor="network">
-            Pilih jaringan
-          </label>
-          <select
-            id="network"
+          <NetworkPicker
             value={activeNetwork}
             disabled={busy}
-            onChange={(e) => {
-              setNetwork(e.target.value);
-              localStorage.setItem("motochain.network", e.target.value);
+            onOpen={() => setMenu(false)}
+            onChange={(nextNetwork) => {
+              setNetwork(nextNetwork);
+              localStorage.setItem("motochain.network", nextNetwork);
               setAccount("");
               go("/garage");
             }}
-          >
-            <option value="testnet">BOT Testnet</option>
-            <option value="mainnet">BOT Mainnet</option>
-          </select>
+          />
           {
             <button
               className="secondary"
