@@ -10,11 +10,12 @@ test("BOT networks; saved demo selection is migrated without presenting fake mot
     );
   });
   await page.goto("/");
-  await expect(page.getByLabel("Pilih jaringan")).toHaveValue("testnet");
-  await expect(page.getByLabel("Pilih jaringan").locator("option")).toHaveText([
-    "BOT Testnet",
-    "BOT Mainnet",
-  ]);
+  await expect(page.getByLabel("Pilih jaringan")).toContainText("BOT Testnet");
+  await page.getByLabel("Pilih jaringan").click();
+  await expect(page.getByRole("menuitemradio", { name: "BOT Testnet" })).toHaveAttribute("aria-checked", "true");
+  await expect(page.getByRole("menuitemradio", { name: "BOT Mainnet" })).toHaveAttribute("aria-checked", "false");
+  await page.keyboard.press("Escape");
+  await expect(page.getByLabel("Pilih jaringan")).toBeFocused();
   await expect(page.getByText("FAKE MOTOR")).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Garasi Saya" }),
@@ -46,7 +47,7 @@ test("Mainnet selection is retained and has separate unconfigured settings", asy
     page.getByRole("heading", { name: "BOT Mainnet", exact: true }),
   ).toBeVisible();
   await expect(page.locator("form")).toHaveCount(2);
-  await expect(page.getByLabel("Pilih jaringan")).toHaveValue("mainnet");
+  await expect(page.getByLabel("Pilih jaringan")).toContainText("BOT Mainnet");
   expect(
     await page.evaluate(() => localStorage.getItem("motochain.network")),
   ).toBe("mainnet");
@@ -56,8 +57,9 @@ test("Mainnet selection is retained and has separate unconfigured settings", asy
       exact: false,
     }),
   ).toBeVisible();
-  await page.getByLabel("Pilih jaringan").selectOption("testnet");
-  await expect(page.getByLabel("Pilih jaringan")).toHaveValue("testnet");
+  await page.getByLabel("Pilih jaringan").click();
+  await page.getByRole("menuitemradio", { name: "BOT Testnet" }).click();
+  await expect(page.getByLabel("Pilih jaringan")).toContainText("BOT Testnet");
 });
 test("old demo passport URL is rejected instead of reading an unrelated on-chain passport", async ({
   page,
