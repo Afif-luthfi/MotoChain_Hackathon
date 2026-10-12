@@ -17,7 +17,7 @@ import { validateMetadata } from "./lib/schema";
 import ReceiptAssistant from "./ReceiptAssistant";
 import "./styles.css";
 
-const BOTCHAIN_EXPLORER_URL = " https://www.botchain.ai/en/";
+const BOTCHAIN_EXPLORER_URL = "https://www.botchain.ai/en/";
 
 const same = (a, b) => Boolean(a && b && a.toLowerCase() === b.toLowerCase());
 const short = (a) =>
@@ -444,14 +444,14 @@ function App() {
       </main>
       <footer className="site-footer">
         <section className="footer-infrastructure" aria-label="Powered by BOT Chain">
-          <p className="footer-eyebrow">SPOWERED BY INFRASTRUCTURE</p>
+          <p className="footer-eyebrow">POWERED BY INFRASTRUCTURE</p>
           <div className="footer-botchain">
             <img src="/botchain-logo.png" alt="" width="64" height="64" />
             <span>BOT CHAIN</span>
           </div>
           {BOTCHAIN_EXPLORER_URL ? (
             <a className="footer-explorer" href={BOTCHAIN_EXPLORER_URL} target="_blank" rel="noopener noreferrer">
-              Verify Smart Contract on Explorer
+              BOT CHAIN Explorer
             </a>
           ) : (
             <span className="footer-explorer" aria-disabled="true">
